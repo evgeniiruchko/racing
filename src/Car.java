@@ -1,6 +1,10 @@
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Semaphore;
+
 public class Car implements Runnable {
     private static int CARS_COUNT;
-
+    private static volatile Integer READY_COUNT = 0;
     static {
         CARS_COUNT = 0;
     }
@@ -8,6 +12,11 @@ public class Car implements Runnable {
     private Race race;
     private int speed;
     private String name;
+    CyclicBarrier cb;
+
+    public static int getReadyCount() {
+        return READY_COUNT;
+    }
 
     public String getName() {
         return name;
@@ -17,11 +26,13 @@ public class Car implements Runnable {
         return speed;
     }
 
-    public Car(Race race, int speed) {
+    public Car(Race race, int speed, CyclicBarrier cb) {
         this.race = race;
         this.speed = speed;
         CARS_COUNT++;
         this.name = "Участник #" + CARS_COUNT;
+        this.cb = cb;
+        //new Thread(this).start();
     }
 
     @Override
@@ -30,6 +41,10 @@ public class Car implements Runnable {
             System.out.println(this.name + " готовится");
             Thread.sleep(500 + (int) (Math.random() * 800));
             System.out.println(this.name + " готов");
+            READY_COUNT++;
+            cb.await();
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
